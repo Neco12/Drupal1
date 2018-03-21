@@ -1,0 +1,87 @@
+<?php
+function testform_menu() {
+ $items['testform'] = array(
+ 'title' => t('New article'),
+ 'page callback' => 'drupal_get_form',
+ 'page arguments' => array('testform_nameform'),
+'access arguments' => array('access content'),
+ 'access callback' => TRUE,
+ 'type' => MENU_NORMAL_ITEM,
+ );
+ return $items;
+}
+function testform_nameform($form, &$form_state){
+ $form['title'] = array(
+ '#title' => t('Title'),
+ '#type' => 'textfield',
+ '#suffix' =>'<br>',
+ '#size' => 30,
+ );
+ $form['tags'] = array(
+ '#title' => t('Tags'),
+ '#type' => 'textfield',
+ '#size' => 30,
+);
+  $form['article'] = array(
+ '#title' => t('Artikal'),
+ '#type' => 'text_format',
+ '#format'=> 'full_html',
+ '#prefix' =>'<br>',
+ '#size' => 80,
+ '#rows' => 15,
+ );
+
+  $form['name'] = array(
+ '#title' => t('Posted by:'),
+ '#type' => 'textfield',
+ '#prefix' =>'<br>',
+ '#size' => 30,
+ );
+$form['submit'] = array(
+    '#type' => 'submit',
+    '#prefix' => '<br><br>',
+     '#value' => t('Submit'),
+        '#prefix' => '<div id="replace_textfield_div">',
+    '#suffix' => '</div>',
+     '#ajax' => array(
+      'callback' => 'ajax_example_simplest_callback',
+      'wrapper' => 'replace_textfield_div',
+      'method' => 'replace',),
+  );
+ return $form;
+}
+function ajax_example_simplest_callback($form,&$form_state) {
+  return $form['submit'];
+}
+
+
+
+function testform_nameform_validate($form, $form_state) {
+ drupal_set_message(t('New article!'));
+}
+function testform_nameform_submit($form, &$form_state,$form_id) {
+   global $user;
+$nodes = array(
+'tag'=>  $form_state['values']['tags'],
+'article'=> $form_state['values']['article'],
+'post'=> $form_state['values']['name']['value'],
+);
+  $node = new stdClass();
+  $node->title = $form_state['values']['title'];
+  $node->type = 'testform';
+    $node->body['und'][0]['value'] = $nodes['tag'];
+    $node->body['und'][0]['format'] = 3;
+    $node->body['und'][0]['taxonomy_term'] = $nodes['tag'];
+    $node->taxonomy->name = $nodes['tag'];
+  node_object_prepare($node);
+  $node->language = LANGUAGE_NONE;
+  $node->uid = $user->uid;
+  $node->status = 1;
+  $node->promote = 1;
+  $node->comment = 0;
+  $node = node_submit($node); // Prepare node for saving
+  $form_state['redirect']  = '/node';
+  node_save($node);
+  drupal_set_message( "Node with nid " . $node->nid . " saved!\n");
+}
+

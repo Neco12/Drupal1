@@ -1,0 +1,5 @@
+name = Test forma
+description = Test Forma
+package = Custom Forms
+core = 7.x
+files[]=testform.module
